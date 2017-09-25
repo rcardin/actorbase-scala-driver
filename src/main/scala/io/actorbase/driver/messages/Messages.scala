@@ -1,10 +1,4 @@
-package io.actorbase.driver
-
-import akka.actor.ActorSystem
-import akka.pattern.ask
-import io.actorbase.driver.messages.Messages.Request.CreateCollection
-
-import scala.concurrent.Future
+package io.actorbase.driver.messages
 
 /**
   * The MIT License (MIT)
@@ -29,36 +23,16 @@ import scala.concurrent.Future
   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   * SOFTWARE.
   *
-  * An active connection to an Actorbase instance.
+  * Messages used to talk with an instance of Actorbase
   *
-  * @author Riccardo Cardin
-  * @version 1.0
-  * @since 1.0
   */
-class Connection(uri: String) {
-  implicit val context: ActorSystem = ActorSystem("actorbase-driver")
-  private val mainActor = context.actorSelection(uri)
-
-  /**
-    * Gets the reference to an existing collection
-    *
-    * @param name Name of the collection
-    * @return A collection
-    */
-  def collection(name: String): Collection = Collection(mainActor)
-
-  // FIXME How can I convert Any to an instance of the right type? mapTo handles only a single message, as far as I know
-  def newCollection(name: String): Future[Any] =
-    mainActor ? CreateCollection(name)
+object Messages {
+  sealed trait Message
+  object Request {
+    case class CreateCollection(name: String) extends Message
+  }
+  object Response {
+    case class CreateCollectionAck(name: String) extends Message
+    case class CreateCollectionNAck(name: String, error: String) extends Message
+  }
 }
-
-object Connection {
-  /**
-    * Creates a connection to the actorbase instance listening at `uri`.
-    *
-    * @param uri Location of the actorbase instance
-    * @return The active connection
-    */
-  def apply(uri: String): Connection = new Connection(uri)
-}
-
