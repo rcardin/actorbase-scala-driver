@@ -24,15 +24,14 @@ package io.actorbase.driver.messages
   * SOFTWARE.
   *
   * Messages used to talk with an instance of Actorbase
-  *
   */
 object Messages {
-  sealed trait Message
   object Request {
-    case class CreateCollection(name: String) extends Message
+    case class CreateCollection(name: String)
   }
   object Response {
-    case class CreateCollectionAck(name: String) extends Message
-    case class CreateCollectionNAck(name: String, error: String) extends Message
+    sealed trait CreationResponse
+    case class CreateCollectionAck(name: String) extends CreationResponse
+    case class CreateCollectionNAck(name: String, error: String) extends CreationResponse
   }
 }

@@ -2,9 +2,13 @@ package io.actorbase.driver
 
 import akka.actor.ActorSystem
 import akka.pattern.ask
+import akka.util.Timeout
+import io.actorbase.driver.exceptions.CreateCollectionException
 import io.actorbase.driver.messages.Messages.Request.CreateCollection
+import io.actorbase.driver.messages.Messages.Response.{CreateCollectionAck, CreateCollectionNAck, CreationResponse}
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationLong
 
 /**
   * The MIT License (MIT)
@@ -45,11 +49,17 @@ class Connection(uri: String) {
     * @param name Name of the collection
     * @return A collection
     */
-  def collection(name: String): Collection = Collection(mainActor)
+  def collection(name: String): Collection = Collection(name, mainActor)
 
-  // FIXME How can I convert Any to an instance of the right type? mapTo handles only a single message, as far as I know
-  def newCollection(name: String): Future[Any] =
-    mainActor ? CreateCollection(name)
+  def newCollection(name: String): Future[Collection] = {
+    implicit val timeout: Timeout = Timeout(5 seconds)
+    (mainActor ? CreateCollection(name))
+      .mapTo[CreationResponse]
+      .collect {
+        case CreateCollectionAck(coll) => Collection(coll, mainActor)
+        case CreateCollectionNAck(coll, error) => throw CreateCollectionException(coll, error)
+      }
+  }
 }
 
 object Connection {

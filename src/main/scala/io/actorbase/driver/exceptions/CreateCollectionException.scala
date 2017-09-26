@@ -1,6 +1,4 @@
-package io.actorbase.driver
-
-import akka.actor.ActorSelection
+package io.actorbase.driver.exceptions
 
 /**
   * The MIT License (MIT)
@@ -25,15 +23,6 @@ import akka.actor.ActorSelection
   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   * SOFTWARE.
   *
-  * A collection of keys and associated values.
-  *
-  * @author Riccardo Cardin
-  * @version 1.0
-  * @since 1.0
+  * Represents an error risen during the creation of a new collection
   */
-class Collection(name: String, main: ActorSelection) {
-  def find[T](key: String) = ???
-}
-object Collection {
-  def apply(name: String, main: ActorSelection): Collection = new Collection(name, main)
-}
+case class CreateCollectionException(collection: String, error: String) extends RuntimeException(error)
