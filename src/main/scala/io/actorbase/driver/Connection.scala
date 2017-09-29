@@ -3,9 +3,9 @@ package io.actorbase.driver
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
+import io.actorbase.actor.api.Api.Request.CreateCollection
+import io.actorbase.actor.api.Api.Response.{CreateCollectionAck, CreateCollectionNAck, CreationResponse}
 import io.actorbase.driver.exceptions.CreateCollectionException
-import io.actorbase.driver.messages.Messages.Request.CreateCollection
-import io.actorbase.driver.messages.Messages.Response.{CreateCollectionAck, CreateCollectionNAck, CreationResponse}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationLong
