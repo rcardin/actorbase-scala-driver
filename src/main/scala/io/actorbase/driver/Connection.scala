@@ -7,6 +7,7 @@ import io.actorbase.actor.api.Api.Request.CreateCollection
 import io.actorbase.actor.api.Api.Response.{CreateCollectionAck, CreateCollectionNAck, CreationResponse}
 import io.actorbase.driver.exceptions.CreateCollectionException
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationLong
 
@@ -39,8 +40,12 @@ import scala.concurrent.duration.DurationLong
   * @version 1.0
   * @since 1.0
   */
-class Connection(uri: String) {
-  implicit val context: ActorSystem = ActorSystem("actorbase-driver")
+sealed abstract class Connection(uri: String) {
+  def collection(name: String): Collection
+  def newCollection(name: String): Future[Collection]
+}
+
+class ConnectionToActorbase(uri: String)(implicit context: ActorSystem) extends Connection(uri) {
   private val mainActor = context.actorSelection(uri)
 
   /**
@@ -69,6 +74,6 @@ object Connection {
     * @param uri Location of the actorbase instance
     * @return The active connection
     */
-  def apply(uri: String): Connection = new Connection(uri)
+  def apply(uri: String): Connection = new ConnectionToActorbase(uri)
 }
 
