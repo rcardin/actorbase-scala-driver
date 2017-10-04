@@ -27,9 +27,9 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, MustMatchers, WordSpecL
   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   * SOFTWARE.
   *
-  * Tests relative to connection to an Actorbase
+  * Tests relative to connection to an instance of Actorbase
   */
-class ConnectionToActorbaseTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
+class ActorbaseTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
   with ImplicitSender
   with WordSpecLike
   with MustMatchers
@@ -40,10 +40,9 @@ class ConnectionToActorbaseTest extends TestKit(ActorSystem("testSystemDriverAct
     TestKit.shutdownActorSystem(system)
   }
 
-  "A connection" must {
-    "create a new connection to an Actorbase using a uri" in {
-      val connection = Connection("akka://actorbase/main-actor")
+  "The driver" must {
+    "connect to an Actorbase using a uri" in {
+      val connection = Actorbase("akka://actorbase/main-actor")(system)
     }
   }
-
 }

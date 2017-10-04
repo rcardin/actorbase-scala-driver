@@ -1,11 +1,13 @@
 package io.actorbase.driver
 
-import akka.actor.ActorSelection
+import akka.actor.ActorSystem
+import akka.testkit.{ImplicitSender, TestKit}
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, MustMatchers, WordSpecLike}
 
 /**
   * The MIT License (MIT)
   *
-  * Copyright (c) 2017 Riccardo Cardin
+  * Copyright (c) 2015 - 2017 Riccardo Cardin
   *
   * Permission is hereby granted, free of charge, to any person obtaining a copy
   * of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +27,25 @@ import akka.actor.ActorSelection
   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   * SOFTWARE.
   *
-  * A collection of keys and associated values.
-  *
-  * @author Riccardo Cardin
-  * @version 1.0
-  * @since 1.0
+  * Tests relative to connection to an Actorbase
   */
-class Collection(name: String, main: ActorSelection) {
-  def find[T](key: String) = ???
-}
-object Collection {
-  def apply(name: String, main: ActorSelection): Collection = new Collection(name, main)
+class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
+  with ImplicitSender
+  with WordSpecLike
+  with MustMatchers
+  with BeforeAndAfter
+  with BeforeAndAfterAll {
+
+  // var connection: Connection = ???
+
+  override protected def afterAll(): Unit = {
+    TestKit.shutdownActorSystem(system)
+  }
+
+  "A connection" must {
+    "create a new collection using a name" in {
+      // TODO Implement this test
+    }
+  }
+
 }

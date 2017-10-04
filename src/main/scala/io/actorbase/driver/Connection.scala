@@ -1,6 +1,6 @@
 package io.actorbase.driver
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import io.actorbase.actor.api.Api.Request.CreateCollection
@@ -40,40 +40,25 @@ import scala.concurrent.duration.DurationLong
   * @version 1.0
   * @since 1.0
   */
-sealed abstract class Connection(uri: String) {
-  def collection(name: String): Collection
-  def newCollection(name: String): Future[Collection]
-}
-
-class ConnectionToActorbase(uri: String)(implicit context: ActorSystem) extends Connection(uri) {
-  private val mainActor = context.actorSelection(uri)
+class Connection private[driver] (private val mainActor: ActorSelection) {
 
   /**
-    * Gets the reference to an existing collection
+    * Creates a new collection. Returns a future containing the name of the created collection.
     *
-    * @param name Name of the collection
-    * @return A collection
+    * @param name Name of the new collection.
+    * @return A future containing the name of the created collection.
+    *
+    * @throws CreateCollectionException If there is an error during the creation process of
+    *                                   the new collection
     */
-  def collection(name: String): Collection = Collection(name, mainActor)
-
-  def newCollection(name: String): Future[Collection] = {
+  def createCollection(name: String): Future[String] = {
     implicit val timeout: Timeout = Timeout(5 seconds)
     (mainActor ? CreateCollection(name))
       .mapTo[CreationResponse]
       .collect {
-        case CreateCollectionAck(coll) => Collection(coll, mainActor)
+        case CreateCollectionAck(coll) => coll
         case CreateCollectionNAck(coll, error) => throw CreateCollectionException(coll, error)
       }
   }
-}
-
-object Connection {
-  /**
-    * Creates a connection to the actorbase instance listening at `uri`.
-    *
-    * @param uri Location of the actorbase instance
-    * @return The active connection
-    */
-  def apply(uri: String): Connection = new ConnectionToActorbase(uri)
 }
 
