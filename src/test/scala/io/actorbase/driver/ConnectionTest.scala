@@ -1,8 +1,13 @@
 package io.actorbase.driver
 
-import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, MustMatchers, WordSpecLike}
+import akka.actor.{ActorSelection, ActorSystem}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import io.actorbase.actor.api.Api.Request.CreateCollection
+import io.actorbase.actor.api.Api.Response.CreateCollectionAck
+import org.scalatest._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
   * The MIT License (MIT)
@@ -36,7 +41,7 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
   with BeforeAndAfter
   with BeforeAndAfterAll {
 
-  // var connection: Connection = ???
+  var connection: Connection = _
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
@@ -44,7 +49,12 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
 
   "A connection" must {
     "create a new collection using a name" in {
-      // TODO Implement this test
+      val probe = TestProbe.apply()(system)
+      connection = new Connection(ActorSelection(probe.ref, "/"))
+      val result: Future[String] = connection.createCollection("coll")
+      probe.expectMsg(CreateCollection("coll"))
+      probe.reply(CreateCollectionAck("coll"))
+      result.map(name => assert(name == "coll"))
     }
   }
 
