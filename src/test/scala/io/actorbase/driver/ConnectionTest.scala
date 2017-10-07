@@ -3,11 +3,13 @@ package io.actorbase.driver
 import akka.actor.{ActorSelection, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import io.actorbase.actor.api.Api.Request.CreateCollection
-import io.actorbase.actor.api.Api.Response.CreateCollectionAck
+import io.actorbase.actor.api.Api.Response.{CreateCollectionAck, CreateCollectionNAck}
+import io.actorbase.driver.exceptions.CreateCollectionException
 import org.scalatest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Failure
 
 /**
   * The MIT License (MIT)
@@ -41,6 +43,8 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
   with BeforeAndAfter
   with BeforeAndAfterAll {
 
+  val collectionName = "coll"
+
   var connection: Connection = _
 
   override protected def afterAll(): Unit = {
@@ -51,11 +55,28 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
     "create a new collection using a name" in {
       val probe = TestProbe.apply()(system)
       connection = new Connection(ActorSelection(probe.ref, "/"))
-      val result: Future[String] = connection.createCollection("coll")
-      probe.expectMsg(CreateCollection("coll"))
-      probe.reply(CreateCollectionAck("coll"))
-      result.map(name => assert(name == "coll"))
+      val result: Future[String] = connection.createCollection(collectionName)
+      probe.expectMsg(CreateCollection(collectionName))
+      probe.reply(CreateCollectionAck(collectionName))
+      result.onComplete { maybeAName =>
+        assert(maybeAName.isSuccess)
+        assert(maybeAName.get == collectionName)
+      }
+    }
+
+    "fail gracefully is collection creation does not succeed" in {
+      val error = "Some error has occured"
+      val probe = TestProbe.apply()(system)
+      connection = new Connection(ActorSelection(probe.ref, "/"))
+      val result: Future[String] = connection.createCollection(collectionName)
+      probe.expectMsg(CreateCollection(collectionName))
+      probe.reply(CreateCollectionNAck(collectionName, error))
+      result.onComplete {
+        case Failure(ex) => assert(ex == CreateCollectionException(collectionName, error))
+        case _ => fail()
+      }
     }
   }
 
 }
+
