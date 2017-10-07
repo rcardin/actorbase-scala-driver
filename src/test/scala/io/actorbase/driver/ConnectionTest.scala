@@ -46,6 +46,12 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
   val collectionName = "coll"
 
   var connection: Connection = _
+  var probe: TestProbe = _
+
+  before {
+    probe = TestProbe.apply()(system)
+    connection = new Connection(ActorSelection(probe.ref, "/"))
+  }
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
@@ -53,8 +59,6 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
 
   "A connection" must {
     "create a new collection using a name" in {
-      val probe = TestProbe.apply()(system)
-      connection = new Connection(ActorSelection(probe.ref, "/"))
       val result: Future[String] = connection.createCollection(collectionName)
       probe.expectMsg(CreateCollection(collectionName))
       probe.reply(CreateCollectionAck(collectionName))
@@ -66,8 +70,6 @@ class ConnectionTest extends TestKit(ActorSystem("testSystemDriverActorbase"))
 
     "fail gracefully is collection creation does not succeed" in {
       val error = "Some error has occured"
-      val probe = TestProbe.apply()(system)
-      connection = new Connection(ActorSelection(probe.ref, "/"))
       val result: Future[String] = connection.createCollection(collectionName)
       probe.expectMsg(CreateCollection(collectionName))
       probe.reply(CreateCollectionNAck(collectionName, error))
